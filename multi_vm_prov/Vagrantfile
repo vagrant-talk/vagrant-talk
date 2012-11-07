@@ -1,0 +1,48 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant::Config.run do |config|
+	config.vm.define :app do |app_config|
+		app_config.vm.box = "precise64"
+		app_config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+		app_config.vm.network :hostonly, "10.0.0.2"
+		app_config.vm.network :bridged, :bridge => 'en0: Ethernet'
+		app_config.vm.forward_port 80, 8081
+		app_config.vm.share_folder "app_data","/app","app_files"
+		app_config.vm.provision :shell, :path => "test.sh"
+		app_config.vm.host_name = "app.example.com"
+		app_config.vm.provision :puppet do |puppet|	
+			puppet.manifests_path = "manifests"
+			puppet.manifest_file = "nodes.pp"
+			puppet.module_path = "modules"
+		end
+
+
+	end
+	config.vm.define :db do |db_config|
+		db_config.vm.box = "precise64"
+		db_config.vm.network :hostonly, "10.0.0.3"
+		db_config.vm.share_folder "db_data","/var/db/db_files","db_files"
+		db_config.vm.provision :shell, :path => "test.sh"
+		db_config.vm.host_name = "db.example.com"
+		db_config.vm.provision :puppet do |puppet|	
+			puppet.manifests_path = "manifests"
+			puppet.manifest_file = "nodes.pp"
+			puppet.module_path = "modules"
+		end
+
+	end
+	config.vm.define :static do |static_config|
+		static_config.vm.box = "precise64"
+		static_config.vm.network :hostonly, "10.0.0.4"
+		static_config.vm.share_folder "static_data","/var/www/static","static_files"
+		static_config.vm.host_name = "static.example.com"
+		static_config.vm.provision :shell, :path => "test.sh"
+
+		static_config.vm.provision :puppet do |puppet|	
+			puppet.manifests_path = "manifests"
+			puppet.manifest_file = "nodes.pp"
+			puppet.module_path = "modules"
+		end
+	end
+end
